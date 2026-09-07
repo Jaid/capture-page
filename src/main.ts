@@ -192,5 +192,4 @@ export type {
   WaitEvent,
 } from './types.ts'
 
-export {capturePage}
 export default capturePage
