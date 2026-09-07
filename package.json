@@ -2,29 +2,34 @@
   "name": "capture-page",
   "version": "0.1.0",
   "type": "module",
-  "exports": {
-    ".": {
-      "default": "./src/main.ts"
-    }
+  "funding": "https://github.com/sponsors/Jaid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaid/capture-page.git"
   },
   "imports": {
     "#src/*": "./src/*",
     "#root/*": "./*"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Jaid/capture-page.git"
-  },
   "scripts": {
-    "test": "bun test --max-concurrency 1 ./test"
+    "lint": "tsc --noEmit --noUnusedLocals --pretty false",
+    "test": "bun test --max-concurrency 1 ./test",
+    "test_live": "CAPTURE_PAGE_LIVE=1 bun test --max-concurrency 1 ./test"
+  },
+  "dependencies": {
+    "fs-extra": "11.4.0",
+    "puppeteer": "25.10.0"
+  },
+  "optionalDependencies": {
+    "sass": "1.92.1"
   },
   "devDependencies": {
     "@types/bun": "1.4.1",
+    "@types/fs-extra": "11.0.4",
     "eslint": "10.10.0",
     "eslint-config-jaid": "26.0.0",
     "tsconfig-jaid-bun": "16.0.0",
     "typescript": "npm:typescript-classic@6.0.4"
-  },
-  "funding": "https://github.com/sponsors/Jaid",
-  "license": "MIT"
+  }
 }
