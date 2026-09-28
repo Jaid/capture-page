@@ -59,7 +59,7 @@ const waitEvent = async (page: Page, event: WaitEvent, timeout: number, signal: 
     return
   }
   if (!lifecycle.has(event)) {
-    throw new TypeError(`Unsupported wait event: ${String(event)}`)
+    throw new TypeError(`Unsupported wait event: ${event}`)
   }
   await waitLifecycle(page, event, timeout, signal)
 }

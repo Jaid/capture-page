@@ -20,7 +20,7 @@ afterAll(async () => {
   await fs.remove(folder)
 })
 const dimensions = (buffer: Buffer) => {
-  expect(buffer.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a')
+  expect(buffer.subarray(0, 8).toHex()).toBe('89504e470d0a1a0a')
   return [buffer.readUInt32BE(16), buffer.readUInt32BE(20)]
 }
 const renderWebgl = async (page: Page, draw: boolean) => {
@@ -176,7 +176,7 @@ describe('capturePage', () => {
       ...base,
       quality: 88,
     })
-    expect(jpeg.buffer.subarray(0, 3).toString('hex')).toBe('ffd8ff')
+    expect(jpeg.buffer.subarray(0, 3).toHex()).toBe('ffd8ff')
     expect(Buffer.from(await fs.readFile(jpegPath)).equals(jpeg.buffer)).toBe(true)
     const webp = await capturePage.save({html: '<p>webp</p>'}, path.join(folder, 'shot.webp'), base)
     expect(webp.buffer.subarray(8, 12).toString()).toBe('WEBP')

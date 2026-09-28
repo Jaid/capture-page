@@ -166,7 +166,7 @@ export const acquireBrowser = async (input: Options['browser'], options: Pick<Op
         await verifyBrowser(browser, executablePath)
       } catch (error) {
         await browser.close().catch(() => {})
-        failures.push(`${candidate}: launched but screenshot probe failed: ${error instanceof Error ? error.message : String(error)}`)
+        failures.push(`${candidate}: launched but screenshot probe failed: ${Error.isError(error) ? error.message : String(error)}`)
         continue
       }
       return {
@@ -174,7 +174,7 @@ export const acquireBrowser = async (input: Options['browser'], options: Pick<Op
         owned: true,
       }
     } catch (error) {
-      failures.push(`${candidate}: ${error instanceof Error ? error.message : String(error)}`)
+      failures.push(`${candidate}: ${Error.isError(error) ? error.message : String(error)}`)
     }
   }
   throw new Error(`Could not launch a browser. Tried:\n${failures.map(line => `- ${line}`).join('\n')}`)
