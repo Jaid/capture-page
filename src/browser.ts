@@ -1,10 +1,10 @@
 import type {Options} from './types.ts'
-import type {Browser, SupportedBrowser} from 'puppeteer'
+import type {Browser, SupportedBrowser} from 'puppeteer-core'
 
 import fs from 'node:fs'
 import path from 'node:path'
 
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
 
 type BrowserLease = {
   browser: Browser

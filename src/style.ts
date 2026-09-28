@@ -1,5 +1,5 @@
 import type {Arrayable, Body, Options, Style, StyleProperties} from './types.ts'
-import type {Page} from 'puppeteer'
+import type {Page} from 'puppeteer-core'
 
 const NORMALIZE_CSS = `*, *::before, *::after { box-sizing: border-box; }
 html { line-height: 1.15; -webkit-text-size-adjust: 100%; }

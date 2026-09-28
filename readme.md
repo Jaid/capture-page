@@ -274,7 +274,7 @@ A successful process launch is not enough to prove a browser is usable for scree
 You can also supply an existing Puppeteer `Browser`. capture-page creates an isolated `BrowserContext` for the capture and leaves your browser running:
 
 ```ts
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
 import capturePage from 'capture-page'
 
 const browser = await puppeteer.launch()

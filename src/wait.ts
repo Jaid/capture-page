@@ -1,5 +1,5 @@
 import type {WaitBehavior, WaitEvent} from './types.ts'
-import type {Page, PuppeteerLifeCycleEvent} from 'puppeteer'
+import type {Page, PuppeteerLifeCycleEvent} from 'puppeteer-core'
 
 import {settleRenderedCanvas, waitForRenderedCanvas} from './render.ts'
 

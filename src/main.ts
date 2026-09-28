@@ -1,5 +1,5 @@
 import type {Format, Options, Result, Target} from './types.ts'
-import type {Page, ScreenshotOptions} from 'puppeteer'
+import type {Page, ScreenshotOptions} from 'puppeteer-core'
 
 import path from 'node:path'
 

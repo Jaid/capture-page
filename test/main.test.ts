@@ -1,11 +1,11 @@
-import type {Page} from 'puppeteer'
+import type {Page} from 'puppeteer-core'
 
 import {afterAll, describe, expect, test} from 'bun:test'
 import os from 'node:os'
 import path from 'node:path'
 
 import fs from 'fs-extra'
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
 
 import capturePage from '#src/main.ts'
 

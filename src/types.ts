@@ -1,4 +1,4 @@
-import type {Browser, Page, PuppeteerLifeCycleEvent, ScreenshotOptions} from 'puppeteer'
+import type {Browser, Page, PuppeteerLifeCycleEvent, ScreenshotOptions} from 'puppeteer-core'
 
 export type Arrayable<T> = Array<T> | T
 

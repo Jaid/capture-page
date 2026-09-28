@@ -1,5 +1,5 @@
 import type {Target} from './types.ts'
-import type {Page} from 'puppeteer'
+import type {Page} from 'puppeteer-core'
 
 import path from 'node:path'
 import {pathToFileURL} from 'node:url'
