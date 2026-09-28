@@ -13,6 +13,7 @@
     "#root/*": "./*"
   },
   "scripts": {
+    "build": "build_lib --terser-strength aggressive",
     "lint": "tsc --noEmit --noUnusedLocals --pretty false",
     "test": "bun test --max-concurrency 1 ./test",
     "test_live": "CAPTURE_PAGE_LIVE=1 bun test --max-concurrency 1 ./test"
