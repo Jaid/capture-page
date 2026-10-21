@@ -245,6 +245,64 @@ describe('capturePage', () => {
       await browser.close()
     }
   }, 30_000)
+  test('runs WebMCP tool calls in order and returns their parsed results', async () => {
+    const page = path.join(folder, 'tools.html')
+    await fs.writeFile(page, `<p>tools</p><script>
+      let count = 0
+      setTimeout(() => {
+        document.modelContext.registerTool({name: 'add', description: 'adds', inputSchema: {type: 'object'}, execute: ({amount}) => ({count: count += amount})})
+        document.modelContext.registerTool({name: 'echo', description: 'echoes', inputSchema: {type: 'object'}, execute: () => 'plain'})
+      }, 200)
+    </script>`)
+    const result = await capturePage({path: page}, {
+      ...base,
+      toolCalls: [
+        {
+          name: 'add',
+          input: {amount: 2},
+        },
+        {
+          name: 'add',
+          input: {amount: 3},
+        },
+        {name: 'echo'},
+      ],
+    })
+    expect(result.toolResults).toEqual([{count: 2}, {count: 5}, 'plain'])
+    expect(dimensions(result.buffer)).toEqual([320, 180])
+    await expect(capturePage({path: page}, {
+      ...base,
+      timeout: 1000,
+      toolCalls: [{name: 'missing'}],
+    })).rejects.toThrow('not registered')
+  }, 20_000)
+  test('captures the first download instead of a screenshot', async () => {
+    const page = path.join(folder, 'download.html')
+    await fs.writeFile(page, `<p>download</p><script>
+      document.modelContext.registerTool({name: 'download_text', description: 'downloads', inputSchema: {type: 'object'}, execute: () => {
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(new Blob(['downloaded bytes'], {type: 'text/plain'}))
+        link.download = 'frame.txt'
+        link.click()
+        return {started: true}
+      }})
+    </script>`)
+    const output = path.join(folder, 'saved', 'frame.bin')
+    const result = await capturePage.save({path: page}, output, {
+      ...base,
+      capture: 'download',
+      toolCalls: [{name: 'download_text'}],
+    })
+    expect(result.buffer.toString()).toBe('downloaded bytes')
+    expect(result.suggestedFilename).toBe('frame.txt')
+    expect(result.toolResults).toEqual([{started: true}])
+    expect(await fs.readFile(output, 'utf8')).toBe('downloaded bytes')
+    await expect(capturePage({html: '<p>nothing</p>'}, {
+      ...base,
+      capture: 'download',
+      timeout: 1000,
+    })).rejects.toThrow('No download')
+  }, 20_000)
   test('validates impossible inputs before browser launch', async () => {
     await expect(capturePage({html: ''}, {width: 0})).rejects.toThrow('width')
     await expect(capturePage({html: ''}, {quality: 80})).rejects.toThrow('quality')

@@ -160,6 +160,8 @@ export const acquireBrowser = async (input: Options['browser'], options: Pick<Op
         browser: browserKind(executablePath),
         executablePath,
         headless: true,
+        // Long readiness waits are single protocol calls, so the protocol must outlast them.
+        protocolTimeout: Math.max(options.timeout ?? 0, 180_000),
         timeout: options.timeout,
       })
       try {

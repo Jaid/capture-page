@@ -69,6 +69,15 @@ export type WaitBehavior = WaitEvent | {
   rules: Array<WaitEvent>
 }
 
+export type ToolCall = {
+  /** Input object passed to the tool. @default {} */
+  input?: Record<string, unknown>
+  name: string
+}
+
+/** `screenshot` captures through Puppeteer, `download` waits for the page to download the image itself. */
+export type Capture = 'download' | 'screenshot'
+
 export type Options = {
   /** Additional launch arguments when capture-page launches the browser. */
   args?: Array<string>
@@ -76,6 +85,8 @@ export type Options = {
   body?: Body | BodyBehavior
   /** Browser instance, executable/name, or executables/names to try in order. */
   browser?: Arrayable<string> | Browser
+  /** Where the image comes from. With `download`, the first download the page starts is the result, e.g. one triggered by a tool call. @default 'screenshot' */
+  capture?: Capture
   /** @default 'light' */
   colorScheme?: 'dark' | 'light'
   /** Additional delay after readiness and font loading, in milliseconds. @default 0 */
@@ -104,8 +115,10 @@ export type Options = {
   sandbox?: boolean
   /** CSS, Sass/SCSS or structured style injections. */
   style?: Arrayable<Style>
-  /** Timeout for launch, navigation and each readiness operation, in milliseconds. @default 30000 */
+  /** Timeout for launch, navigation, each readiness operation, each tool call and the download, in milliseconds. @default 30000 */
   timeout?: number
+  /** WebMCP tools to run one after another after the readiness waits and the delay, right before the capture. */
+  toolCalls?: Array<ToolCall>
   /** @default 'networkidle2' */
   wait?: WaitBehavior
   /** @default 1920 */
@@ -114,6 +127,10 @@ export type Options = {
 
 export type Result = {
   buffer: Buffer
-  /** Elapsed milliseconds through screenshot creation. */
+  /** Elapsed milliseconds through screenshot creation or download completion. */
   passedTime: number
+  /** The browser’s file name for a `download` capture. */
+  suggestedFilename?: string
+  /** Results of `toolCalls` in order, parsed from JSON when possible. */
+  toolResults: Array<unknown>
 }

@@ -6,9 +6,11 @@ import path from 'node:path'
 import fs from 'fs-extra'
 
 import {acquireBrowser, releaseBrowser} from './browser.ts'
+import {prepareDownload} from './download.ts'
 import {installRenderProbe} from './render.ts'
 import {applyBody, injectStyles} from './style.ts'
 import {injectPreloadScript, navigate, normalizeTarget} from './target.ts'
+import {runToolCalls} from './toolCalls.ts'
 import {includesThreeWait, waitForFonts, waitForReadiness} from './wait.ts'
 
 const DEFAULT_TIMEOUT = 30_000
@@ -44,6 +46,11 @@ const validateOptions = (options: Options) => {
   }
   if (!Number.isFinite(delay) || delay < 0) {
     throw new RangeError('delay must be a nonnegative number.')
+  }
+  for (const call of options.toolCalls ?? []) {
+    if (typeof call.name !== 'string' || !call.name) {
+      throw new TypeError('Every tool call needs a name.')
+    }
   }
   if (options.quality !== undefined) {
     if (!Number.isSafeInteger(options.quality) || options.quality < 0 || options.quality > 100) {
@@ -85,6 +92,14 @@ const applyMedia = async (page: Page, options: Options) => {
     await page.emulateMediaFeatures(features)
   }
 }
+/** Headless Chromium only exposes `document.modelContext` with the WebMCP feature. */
+const withWebmcp = (args: Array<string> = []) => {
+  const index = args.findIndex(arg => arg.startsWith('--enable-features='))
+  if (index === -1) {
+    return [...args, '--enable-features=WebMCP']
+  }
+  return args.with(index, `${args[index]},WebMCP`)
+}
 const sleep = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds))
 
 type CapturePage = {
@@ -97,13 +112,17 @@ const capturePage = (async (target: Target, options: Options = {}) => {
   const validated = validateOptions(options)
   const normalizedTarget = await normalizeTarget(target)
   const lease = await acquireBrowser(options.browser, {
-    args: options.args,
+    args: options.toolCalls?.length ? withWebmcp(options.args) : options.args,
     sandbox: options.sandbox,
     timeout: validated.timeout,
   })
   let context: Awaited<ReturnType<typeof lease.browser.createBrowserContext>> | undefined
+  let download: Awaited<ReturnType<typeof prepareDownload>> | undefined
   try {
     context = await lease.browser.createBrowserContext()
+    if (options.capture === 'download') {
+      download = await prepareDownload(lease.browser, context, validated.timeout)
+    }
     const page = await context.newPage()
     page.setDefaultNavigationTimeout(validated.timeout)
     page.setDefaultTimeout(validated.timeout)
@@ -136,6 +155,16 @@ const capturePage = (async (target: Target, options: Options = {}) => {
     if (validated.delay) {
       await sleep(validated.delay)
     }
+    const toolResults = options.toolCalls?.length ? await runToolCalls(page, options.toolCalls, validated.timeout) : []
+    if (download) {
+      const {buffer, suggestedFilename} = await download.wait()
+      return {
+        buffer,
+        passedTime: performance.now() - startedAt,
+        suggestedFilename,
+        toolResults,
+      }
+    }
     const screenshotOptions: ScreenshotOptions = {
       captureBeyondViewport: options.fullPage ?? false,
       fullPage: options.fullPage ?? false,
@@ -149,15 +178,18 @@ const capturePage = (async (target: Target, options: Options = {}) => {
     return {
       buffer: Buffer.from(screenshot),
       passedTime: performance.now() - startedAt,
+      toolResults,
     }
   } finally {
+    await download?.dispose()
     await context?.close().catch(() => {})
     await releaseBrowser(lease)
   }
 }) as CapturePage
 capturePage.save = async (target, outputFile, options = {}) => {
-  const format = options.format ?? inferFormat(outputFile)
-  if (!format) {
+  // A download is stored as the page produced it, whatever the extension.
+  const format = options.capture === 'download' ? options.format : options.format ?? inferFormat(outputFile)
+  if (!format && options.capture !== 'download') {
     throw new TypeError('Cannot infer screenshot format from output file extension. Supply options.format.')
   }
   const result = await capturePage(target, {
@@ -174,6 +206,7 @@ export type {
   Arrayable,
   Body,
   BodyBehavior,
+  Capture,
   CssCode,
   FileTarget,
   Format,
@@ -187,6 +220,7 @@ export type {
   StyleObject,
   StyleProperties,
   Target,
+  ToolCall,
   UrlTarget,
   WaitBehavior,
   WaitEvent,

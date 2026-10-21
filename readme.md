@@ -158,6 +158,34 @@ await capturePage(url, {
 
 This lets readiness depend on changes made by the hook.
 
+## WebMCP tool calls
+
+Run tools the page registered on `document.modelContext`, one after another, after the readiness waits and `delay`:
+
+```ts
+const {toolResults} = await capturePage(url, {
+  toolCalls: [
+    {name: 'set_theme', input: {theme: 'dark'}},
+    {name: 'get_status'},
+  ],
+})
+```
+
+Each call waits until its tool is registered, so tools registered after the first render work. Results come back in order as `toolResults`, parsed from JSON when possible. A tool that fails rejects the capture. When capture-page launches the browser, it enables the `WebMCP` feature, which headless Chromium needs to expose `document.modelContext`; a reused `Browser` has to be launched with `--enable-features=WebMCP` itself.
+
+## Download capture
+
+Some pages produce a better image themselves, e.g. a WebGPU readback without DOM overlays. With `capture: 'download'`, capture-page skips `page.screenshot()` and returns the first file the page downloads instead:
+
+```ts
+const {buffer, suggestedFilename, toolResults} = await capturePage.save(url, 'frame.png', {
+  capture: 'download',
+  toolCalls: [{name: 'download_frame', input: {format: 'png'}}],
+})
+```
+
+Downloads go to a private temporary folder that is removed afterward. The download can start at any point after navigation, from a hook, a tool call or the page itself. `save()` writes the downloaded bytes unchanged, so `format`, `quality`, `fullPage` and `omitBackground` do not apply. Without a completed download within `timeout`, the capture rejects.
+
 ## Styles
 
 Raw CSS:
